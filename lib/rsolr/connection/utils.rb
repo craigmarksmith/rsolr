@@ -61,7 +61,9 @@ module RSolr::Connection::Utils
   def hash_to_query(params)
     mapped = params.map do |k, v|
       next if v.to_s.empty?
-      if v.class == Array
+      if((k.to_sym == :facet) && (v.class == Hash))
+        hash_to_query( v.values.flatten.map{|facet_name| ['facet.field', facet_name]} + [["facet",true]] )
+      elsif v.class == Array
         hash_to_query(v.map { |x| [k, x] })
       else
         build_param k, v

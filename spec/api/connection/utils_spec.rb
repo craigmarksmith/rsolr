@@ -1,14 +1,14 @@
 describe RSolr::Connection::Utils do
-  
+
   # calls #let to set "utils" as a method accessor
   module UtilsHelper
     def self.included base
       base.let(:utils){ nil.extend RSolr::Connection::Utils }
     end
   end
-  
+
   context 'hash_to_query method' do
-    
+
     include UtilsHelper
     
     it "should build a query string from a hash, converting arrays to multi-params and removing nils/emptys" do
@@ -23,6 +23,18 @@ describe RSolr::Connection::Utils do
         result.should match(regexp)
       end
       result.split('&').size.should == 5
+    end
+
+    it 'should turn facet on when there is a facet hash' do
+      my_params = {'q'=>'blah', 'facet'=>{'field'=>['location_facet', 'format_facet']}}
+      utils.hash_to_query(my_params).should match(/facet=true/)
+    end
+
+    it 'should format facets correctly' do
+      my_params = {'q'=>'test', 'facet'=>{'field'=>['location_facet', 'format_facet']}}
+      [/facet.field=format_facet/, /facet.field=location_facet/].each do |regexp|
+        utils.hash_to_query(my_params).should match(regexp)
+      end
     end
     
     it 'should escape &' do
@@ -44,13 +56,13 @@ describe RSolr::Connection::Utils do
       expected = 'q=%2Bpopularity%3A%5B10+TO+%2A%5D+%2Bsection%3A0'
       utils.hash_to_query(my_params).should == expected
     end
-    
+
   end
-  
+
   context 'escape method' do
-    
+  
     include UtilsHelper
-    
+  
     it 'should escape properly' do
       utils.escape('+').should == '%2B'
       utils.escape('This is a test').should == 'This+is+a+test'
@@ -58,27 +70,27 @@ describe RSolr::Connection::Utils do
       utils.escape('"').should == '%22'
       utils.escape(':').should == '%3A'
     end
-    
+  
     it 'should escape brackets' do
       utils.escape('{').should == '%7B'
       utils.escape('}').should == '%7D'
     end
-    
+  
     it 'should escape exclamation marks!' do
       utils.escape('!').should == '%21'
     end
-    
+  
   end
   
   context 'build_url method' do
-    
+  
     include UtilsHelper
-    
+  
     it 'should build correctly' do
       url = utils.build_url '/solr/select', {:q=>'test'}, 'blah=blah'
       url.should == '/solr/select?blah=blah&q=test'
     end
-    
+  
   end
   
 end
